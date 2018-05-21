@@ -1,6 +1,6 @@
 <?php
 
-namespace Application\Attribute\OptionalValue;
+namespace Concrete\Package\ExtendedExpressForms\Attribute\OptionalValue;
 
 use Concrete\Attribute\Text\Controller as BaseController;
 use Concrete\Core\Attribute\FontAwesomeIconFormatter;
@@ -28,6 +28,7 @@ class Controller extends BaseController
     {
         $error = $this->app->make('error');
         $error->add( t('Too many bananas'));
+        $error->add( t('And not enough cheese'));
         return $error;
     }
 

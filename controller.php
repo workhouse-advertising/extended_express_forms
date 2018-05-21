@@ -1,6 +1,7 @@
 <?php       
 
 namespace Concrete\Package\ExtendedExpressForms;
+
 use Package;
 use BlockType;
 
@@ -31,5 +32,11 @@ class Controller extends Package
         if (!is_object($type)) {
             $type = $factory->add('optional_value', 'Optional Value', $pkg);
         }
+    }
+
+    public function on_start()
+    {
+        $this->app->make('Concrete\Core\Express\Controller\Manager')
+                  ->setStandardController('\WorkhouseAdvertising\ExtendedExpressForms\Controller\FormController');
     }
 }

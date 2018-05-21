@@ -9,6 +9,7 @@
     </label>
 </div>
 <div class="optional-value" style="display: block;" id="optionalValueInput">
+    aoeuaoeuaoeuaoeu
     <?php
         $attributes = [
             // Add a placeholder
