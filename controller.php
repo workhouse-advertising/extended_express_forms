@@ -34,7 +34,7 @@ class Controller extends Package
         if (!is_object($type)) {
             $type = $factory->add('optional_value', 'Optional Value', $package);
         }
-        $this->installExpressObject($package);
+        $this->installExpressObjects($package);
     }
 
     public function on_start()
@@ -43,17 +43,19 @@ class Controller extends Package
                   ->setStandardController('\WorkhouseAdvertising\ExtendedExpressForms\Controller\FormController');
     }
 
-    protected function installExpressObject($package)
+    /**
+     * Install the express objects for this package
+     * 
+     * @param  [type] $package [description]
+     * @return void
+     */
+    protected function installExpressObjects($package)
     {
         // Register Express objects
         // Check for and create the required express objects
         $formNotificationObject = \Express::getObjectByHandle('form_notification');
-        // $existingObjects = Express::getEntities();
-        // foreach ($existingObjects as $existingObject) {
-        //     var_dump($existingObject->getHandle());
-        // }
 
-        //// TODO: Add a console command or something to handle updates to custom express objects
+        //// TODO: Add something to handle updates to custom express objects
         if (!$formNotificationObject) {
             $formNotificationObject = \Express::buildObject('form_notification', 'form_notifications', 'Form Notification', $package);
             // Set up a select multiple settings object
@@ -64,22 +66,6 @@ class Controller extends Package
             $formNotificationTemplateSettings = new \Concrete\Core\Entity\Attribute\Key\Settings\SelectSettings();
             $formNotificationTemplateSettings->setAllowMultipleValues(true);
             $formNotificationTemplateSettings->setAllowOtherValues(true);
-
-            // Set options list
-            //// TODO: Figure out how to set these options or consider leaving it as-is but allowing users to specify options
-            // $entityManager = \Core::make('database/orm')->entityManager();
-            // $expressFormRepository = $entityManager->getRepository('Concrete\Core\Entity\Express\Form');
-            // $expressForms = $expressFormRepository->findAll();
-            // \Concrete\Core\Entity\Attribute\Value\Value\SelectValueOption();
-            // $selectOptions = [];
-            // foreach ($expressForms as $expressForm) {
-            //     // $selectOptions[$expressForm->getEntity()->getHandle()] = $expressForm->getEntity()->getName();
-            //     $selectOptions[$expressForm->getEntity()->getHandle()] = $expressForm->getEntity()->getHandle();
-            //     // $selectValueOption = new \Concrete\Core\Entity\Attribute\Value\Value\SelectValueOption();
-            // }
-            // $optionsList = new \Concrete\Core\Entity\Attribute\Value\Value\SelectValueOptionList();
-            // $optionsList->setOptions($selectOptions);
-            // $selectMultipleSettings->setOptionList($optionsList);
 
             // Add attributes
             $formNotificationObject->addAttribute('text', 'BCC', 'form_notification_title');
@@ -95,10 +81,15 @@ class Controller extends Package
             $formNotificationObject->save();
 
             // Add the select options
+            //// TODO: Create an attribute that just displays the current available forms rather than having the options set here
             $attributeKey = $formNotificationObject->getAttributeKeyCategory()->getByHandle('form_notification_forms');
-            $values = ['testing value'];
-            foreach ($values as $val) {
-                SelectAttributeTypeOption::add($attributeKey, $val);
+            $entityManager = \Core::make('database/orm')->entityManager();
+            $expressFormRepository = $entityManager->getRepository('Concrete\Core\Entity\Express\Form');
+            $expressForms = $expressFormRepository->findAll();
+            $selectOptions = [];
+            foreach ($expressForms as $expressForm) {
+                $selectOptions[] = $expressForm->getEntity()->getHandle();
+                SelectAttributeTypeOption::add($attributeKey, $expressForm->getEntity()->getHandle());
             }
             // $attributeKey = $formNotificationObject->getAttributeKeyCategory()->getByHandle('form_notification_template');
             // $values = ['testing value'];
