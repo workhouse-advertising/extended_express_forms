@@ -26,7 +26,23 @@ class Controller extends DefaultController
             $value = $this->app->make('helper/text')->entities($this->getAttributeValue()->getValue());
         }
 
-        $this->set('templates', $this->listMailTemplates());
+        $mailTemplates = $this->listMailTemplates();
+
+        if(!in_array($value, $mailTemplates)) {
+            $splitValue = explode('/', $value);
+            if(count($splitValue) > 1) {
+                $pkgHandle = $splitValue[0];
+                $template = $splitValue[1];
+
+                $overrideKey = array_search($template, $mailTemplates['Application']);
+                if($overrideKey !== FALSE) {
+                    $mailTemplates['Application'][$value] = $template;
+                    unset($mailTemplates['Application'][$overrideKey]);
+                }
+            }
+        }
+
+        $this->set('templates', $mailTemplates);
         $this->set('selected_template', $value);
     }
 
@@ -40,10 +56,6 @@ class Controller extends DefaultController
 
         return $av;
     }
-
-    //public function getDisplayValue()
-    //{
-    //}
 
     public function createAttributeValueFromRequest()
     {
