@@ -22,7 +22,7 @@ class Controller extends DefaultController
     public function form()
     {
         $selectedFormId = "";
-        if (is_object($this->getAttributeValue)) {
+        if (is_object($this->getAttributeValue())) {
             $form = $this->entityManager->getRepository('Concrete\Core\Entity\Express\Form')->findOneById($this->getAttributeValue()->getValue());
             if($form) {
                 $selectedFormId = $form->getID();
