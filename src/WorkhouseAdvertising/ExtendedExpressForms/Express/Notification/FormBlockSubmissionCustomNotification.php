@@ -39,7 +39,7 @@ class FormBlockSubmissionCustomNotification extends FormBlockSubmissionEmailNoti
             $customNotifications = $customNotificationsObject->getEntries();
             foreach ($customNotifications as $customNotification) {
                 if($customNotification->getFormNotificationExpressForm() == $form->getID()) {
-                    var_dump('found notification');
+
                     $title = $customNotification->getFormNotificationTitle();
                     $fromAddress = $customNotification->getFormNotificationFromEmail();
                     $fromName = $customNotification->getFormNotificationFromName();
@@ -67,10 +67,17 @@ class FormBlockSubmissionCustomNotification extends FormBlockSubmissionEmailNoti
                     if ($bcc) {
                         $mh->bcc($bcc);
                     }
-                    $mh->addParameter('entity', $entry->getEntity());
-                    $mh->addParameter('formName', $this->getFormName($entry));
+                    $content = $message;
+                    foreach($this->getAttributeValues($entry) as $attributes) {
+                        $handle = $attributes->getAttributeKey()->getAttributeKeyHandle();
+                        $value = $attributes->getValue();
+
+                        $content = str_replace('{{'.$handle.'}}', $value, $content);
+                    }
+
+                    $mh->addParameter('subject', $subject);
                     $mh->addParameter('attributes', $this->getAttributeValues($entry));
-                    $mh->addParameter('message', $message);
+                    $mh->addParameter('content', [ $content ]);
                     $mh->load($templateName, $pkgHandle);
                     if (!$mh->getSubject()) {
                         $mh->setSubject($subject);
