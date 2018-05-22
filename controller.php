@@ -36,6 +36,7 @@ class Controller extends Package
             'optional_value' => 'Optional Value',
             'multiple_emails' => 'Multiple Emails',
             'express_form_select' => 'Express Form Select',
+            'mail_template_select' => 'Mail Template Select',
         ];
 
         foreach($types as $typeHandle => $typeLabel) {
