@@ -29,11 +29,23 @@ class Controller extends Package
     public function install()
     {
         $package = parent::install();
+
         $factory = $this->app->make('Concrete\Core\Attribute\TypeFactory');
-        $type = $factory->getByHandle('optional_value');
-        if (!is_object($type)) {
-            $type = $factory->add('optional_value', 'Optional Value', $package);
+
+        $types = [
+            'optional_value' => 'Optional Value',
+            'multiple_emails' => 'Multiple Emails',
+            'express_form_select' => 'Express Form Select',
+        ];
+
+        foreach($types as $typeHandle => $typeLabel) {
+            $type = $factory->getByHandle($typeHandle);
+
+            if (!is_object($type)) {
+                $type = $factory->add($typeHandle, $typeLabel, $package);
+            }
         }
+
         $this->installExpressObjects($package);
     }
 
@@ -68,15 +80,15 @@ class Controller extends Package
             $formNotificationTemplateSettings->setAllowOtherValues(true);
 
             // Add attributes
-            $formNotificationObject->addAttribute('text', 'BCC', 'form_notification_title');
+            $formNotificationObject->addAttribute('text', 'Title', 'form_notification_title');
             $formNotificationObject->addAttribute('email', 'From Email', 'form_notification_from_email');
             $formNotificationObject->addAttribute('text', 'From Name', 'form_notification_from_name');
             $formNotificationObject->addAttribute('text', 'Subject', 'form_notification_subject');
             $formNotificationObject->addAttribute('textarea', 'Content', 'form_notification_content');
-            $formNotificationObject->addAttribute('select', 'Applicable Forms', 'form_notification_forms', $formNotificationFormsSettings);
-            $formNotificationObject->addAttribute('email', 'Send To (Leave empty for autoresponder)', 'form_notification_to');
             $formNotificationObject->addAttribute('email', 'Reply To', 'form_notification_reply_to');
-            $formNotificationObject->addAttribute('text', 'BCC', 'form_notification_bcc');
+            $formNotificationObject->addAttribute('multiple_emails', 'Send To (Leave empty for autoresponder)', 'form_notification_to');
+            $formNotificationObject->addAttribute('multiple_emails', 'BCC', 'form_notification_bcc');
+            $formNotificationObject->addAttribute('select', 'Applicable Forms', 'form_notification_forms', $formNotificationFormsSettings);
             $formNotificationObject->addAttribute('select', 'Template', 'form_notification_template', $formNotificationTemplateSettings);
             $formNotificationObject->save();
 
