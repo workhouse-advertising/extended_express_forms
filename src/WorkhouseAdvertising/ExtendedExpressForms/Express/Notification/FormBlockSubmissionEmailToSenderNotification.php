@@ -2,6 +2,8 @@
 namespace WorkhouseAdvertising\ExtendedExpressForms\Express\Notification;
 
 use Express;
+use Core;
+use Request;
 use Concrete\Core\Entity\Express\Entry;
 use Concrete\Core\Express\Entry\Notifier\Notification\FormBlockSubmissionEmailNotification;
 use Concrete\Core\User\UserInfoRepository;
@@ -25,60 +27,57 @@ class FormBlockSubmissionEmailToSenderNotification extends FormBlockSubmissionEm
 
     public function notify(Entry $entry, $updateType)
     {
-        $notificationTriggered = false;
-        $form = $entry->getEntity();
-        $formHandle = $form->getHandle();
+        $entity = $entry->getEntity();
+        $entityHandle = $entity->getHandle();
+        $formId = Request::getInstance()->post('express_form_id');
+        $form = null;
+        if($formId) {
+            $form = Core::make(EntityManager::class)->getRepository('Concrete\Core\Entity\Express\Form')->findOneById($formId);
+        }
         $customNotificationsObject = Express::getObjectByHandle('form_notification');
-        if ($customNotificationsObject) {
+        if ($form && $customNotificationsObject) {
             $customNotifications = $customNotificationsObject->getEntries();
             foreach ($customNotifications as $customNotification) {
-                foreach ($customNotification->getFormNotificationForms()->getSelectedOptions() as $selectedOption) {
-                    if (trim($selectedOption->getSelectAttributeOptionValue()) == trim($formHandle)) {
-                        $notificationTriggered = true;
-                        $message = (trim($customNotification->getFormNotificationContent()))? $customNotification->getFormNotificationContent() : $this->blockController->thankyouMsg;
-                        $subject = (trim($customNotification->getFormNotificationSubject()))? $customNotification->getFormNotificationSubject() : t('Thank you for your enquiry');
-                        $fromAddress = (trim($customNotification->getFormNotificationFromEmail()))? trim($customNotification->getFormNotificationFromEmail()) : $this->getFromEmail();
-                        $fromName = (trim($customNotification->getFormNotificationFromName()))? trim($customNotification->getFormNotificationFromName()) : null;
-                        $toEmail = (trim($customNotification->getFormNotificationTo()))? trim($customNotification->getFormNotificationTo()) : $this->getToEmail($entry);
-                        $replyTo = (trim($customNotification->getFormNotificationReplyTo()))? trim($customNotification->getFormNotificationReplyTo()) : $this->getReplyToEmail($entry);
-                        $template = (trim($customNotification->getFormNotificationTemplate()))? trim($customNotification->getFormNotificationTemplate()) : 'block_express_form_submission_to_sender';
-                        $bcc = (trim($customNotification->getFormNotificationBcc()))? trim($customNotification->getFormNotificationBcc()) : false;
-                        $mh = $this->app->make('mail');
-                        $mh->to($toEmail);
-                        $mh->from($fromAddress, $fromName);
-                        $mh->replyto($replyTo);
-                        if ($bcc) {
-                            $mh->bcc($bcc);
-                        }
-                        $mh->addParameter('entity', $entry->getEntity());
-                        $mh->addParameter('formName', $this->getFormName($entry));
-                        $mh->addParameter('attributes', $this->getAttributeValues($entry));
-                        $mh->addParameter('message', $message);
-                        $mh->load($template);
-                        if (!$mh->getSubject()) {
-                            $mh->setSubject($subject);
-                        }
-                        $mh->sendMail();
+                if($customNotification->getFormNotificationExpressForm() == $form->getID()) {
+                    var_dump('found notification');
+                    $title = $customNotification->getFormNotificationTitle();
+                    $fromAddress = $customNotification->getFormNotificationFromEmail();
+                    $fromName = $customNotification->getFormNotificationFromName();
+                    $toEmail = $customNotification->getFormNotificationTo();
+                    $bcc = $customNotification->getFormNotificationBcc();
+                    $replyTo = $customNotification->getFormNotificationReplyTo();
+                    $subject = $customNotification->getFormNotificationSubject();
+                    $message = $customNotification->getFormNotificationContent();
+
+                    $templateName = "";
+                    $pkgHandle = null;
+
+                    $template = explode('/', $customNotification->getFormNotificationMailTemplate());
+                    if(count($template) == 1) {
+                        $templateName = $template[0];
+                    } else {
+                        $pkgHandle = $template[0];
+                        $templateName = $template[1];
                     }
+
+                    $mh = $this->app->make('mail');
+                    $mh->to($toEmail);
+                    $mh->from($fromAddress, $fromName);
+                    $mh->replyto($replyTo);
+                    if ($bcc) {
+                        $mh->bcc($bcc);
+                    }
+                    $mh->addParameter('entity', $entry->getEntity());
+                    $mh->addParameter('formName', $this->getFormName($entry));
+                    $mh->addParameter('attributes', $this->getAttributeValues($entry));
+                    $mh->addParameter('message', $message);
+                    $mh->load($templateName, $pkgHandle);
+                    if (!$mh->getSubject()) {
+                        $mh->setSubject($subject);
+                    }
+                    $mh->sendMail();
                 }
             }
-        }
-        // if ($this->blockController->notifyMeOnSubmission && $this->blockController->replyToEmailControlID) {
-        // Only send the default one if a notification hasn't already been triggered
-        if ($this->blockController->replyToEmailControlID && !$notificationTriggered) {
-            $mh = $this->app->make('mail');
-            $mh->to($this->getToEmail($entry));
-            $mh->from($this->getFromEmail());
-            $mh->replyto($this->getReplyToEmail($entry));
-            $mh->addParameter('entity', $entry->getEntity());
-            $mh->addParameter('formName', $this->getFormName($entry));
-            $mh->addParameter('attributes', $this->getAttributeValues($entry));
-            $mh->addParameter('message', $this->blockController->thankyouMsg);
-            $mh->load('block_express_form_submission_to_sender');
-            if (!$mh->getSubject()) {
-                $mh->setSubject(t('Thank you for your enquiry'));
-            }
-            $mh->sendMail();
         }
     }
 }

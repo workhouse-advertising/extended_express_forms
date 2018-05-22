@@ -77,9 +77,11 @@ class Controller extends DefaultController
             }
         }
 
+        $installedPkgs = [];
         // packages directories
         foreach(glob(DIR_PACKAGES .'/*', GLOB_ONLYDIR) as $pkgPath) {
             $pkgHandle = basename($pkgPath);
+            $installedPkgs[] = $pkgHandle;
             $pkgMailPath = $pkgPath . '/' . DIRNAME_MAIL_TEMPLATES;
             if(is_dir($pkgMailPath)) {
                 foreach(glob($pkgMailPath .'/*.php') as $templatePath) {
@@ -94,12 +96,14 @@ class Controller extends DefaultController
         // core packages directories
         foreach(glob(DIR_PACKAGES_CORE .'/*', GLOB_ONLYDIR) as $pkgPath) {
             $pkgHandle = basename($pkgPath);
-            $pkgMailPath = $pkgPath . '/' . DIRNAME_MAIL_TEMPLATES;
-            if(is_dir($pkgMailPath)) {
-                foreach(glob($pkgMailPath .'/*.php') as $templatePath) {
-                    $template = pathinfo($templatePath, PATHINFO_FILENAME);
-                    if(!in_array($template, $templateList['Application']) && !in_array([ 'template' => $template, 'pkgHandle' => $pkgHandle ], $templateList['Package'])) {
-                        $templateList['Package'][$pkgHandle .'/'. $template] = $pkgHandle .'/'. $template;
+            if(!in_array($pkgHandle, $installedPkgs)) {
+                $pkgMailPath = $pkgPath . '/' . DIRNAME_MAIL_TEMPLATES;
+                if(is_dir($pkgMailPath)) {
+                    foreach(glob($pkgMailPath .'/*.php') as $templatePath) {
+                        $template = pathinfo($templatePath, PATHINFO_FILENAME);
+                        if(!in_array($template, $templateList['Application']) && !in_array([ 'template' => $template, 'pkgHandle' => $pkgHandle ], $templateList['Package'])) {
+                            $templateList['Package'][$pkgHandle .'/'. $template] = $pkgHandle .'/'. $template;
+                        }
                     }
                 }
             }

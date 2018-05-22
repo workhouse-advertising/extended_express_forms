@@ -71,7 +71,6 @@ class Controller extends Package
         //// TODO: Add something to handle updates to custom express objects
         if (!$formNotificationObject) {
             $formNotificationObject = \Express::buildObject('form_notification', 'form_notifications', 'Form Notification', $package);
-            // Set up a select multiple settings object
 
             // Add attributes
             $formNotificationObject->addAttribute('text', 'Title', 'form_notification_title');
