@@ -9,7 +9,7 @@ use Concrete\Core\Express\Entry\Notifier\Notification\FormBlockSubmissionEmailNo
 use Concrete\Core\User\UserInfoRepository;
 use Doctrine\ORM\EntityManager;
 
-class FormBlockSubmissionEmailToSenderNotification extends FormBlockSubmissionEmailNotification
+class FormBlockSubmissionCustomNotification extends FormBlockSubmissionEmailNotification
 {
     protected function getReplyToEmail(Entry $entry)
     {
