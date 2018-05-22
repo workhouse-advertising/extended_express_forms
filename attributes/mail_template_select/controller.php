@@ -21,95 +21,99 @@ class Controller extends DefaultController
 
     public function form()
     {
-        $selectedFormId = "";
-        if (is_object($this->getAttributeValue)) {
-            $form = $this->entityManager->getRepository('Concrete\Core\Entity\Express\Form')->findOneById($this->getAttributeValue()->getValue());
-            if($form) {
-                $selectedFormId = $form->getID();
-            }
+        $value = "";
+        if (is_object($this->attributeValue)) {
+            $value = $this->app->make('helper/text')->entities($this->getAttributeValue()->getValue());
         }
 
-        $expressFormRepository = $this->entityManager->getRepository('Concrete\Core\Entity\Express\Form');
-        $expressForms = $expressFormRepository->findAll();
-        $selectOptions = [];
-        $selectOptions[] = '---';
-        foreach ($expressForms as $expressForm) {
-            $selectOptions[$expressForm->getID()] = $expressForm->getEntity()->getName() . ' > ' . $expressForm->getName();
-        }
-
-        $this->set('forms', $selectOptions);
-        $this->set('selected_form', $selectedFormId);
+        $this->set('templates', $this->listMailTemplates());
+        $this->set('selected_template', $value);
     }
 
-    public function createAttributeValue($formID)
+    public function createAttributeValue($value)
     {
         $av = null;
-        $form = $this->entityManager->getRepository('Concrete\Core\Entity\Express\Form')->findOneById($formID);
-
-        if($form) {
+        if ($value) {
             $av = new TextValue();
-            $av->setValue($form->getID());
+            $av->setValue($value);
         }
 
         return $av;
     }
 
-    public function getDisplayValue()
-    {
-        $value = "";
-        if(is_object($this->attributeValue)) {
-            $expressFormRepository = $this->entityManager->getRepository('Concrete\Core\Entity\Express\Form');
-            $expressForm = $expressFormRepository->findOneById($this->attributeValue->getValue());
-            if($expressForm) {
-                $value = $expressForm->getEntity()->getName() . ' > ' . $expressForm->getName();
-            }
-        }
-        return $value;
-    }
+    //public function getDisplayValue()
+    //{
+    //}
 
     public function createAttributeValueFromRequest()
     {
         $data = $this->post();
         $av = null;
-        if (isset($data['expressFormSelect'])) {
-            $form = $this->entityManager->getRepository('Concrete\Core\Entity\Express\Form')->findOneById($data['expressFormSelect']);
-            if($form) {
-                $av = new TextValue();
-                $av->setValue($form->getID());
-            }
+        if (isset($data['mailTemplateSelect'])) {
+            $av = new TextValue();
+            $av->setValue($data['mailTemplateSelect']);
         }
 
         return $av;
     }
 
     public function listMailTemplates() {
-        $templateList = [];
+
+        $getTemplateNames = function($item) {
+            return $item['template'];
+        };
+
+        $noPackageHandle = function($item) { 
+            return is_null($item['pkgHandle']);
+        };
+
+        $templateList[] = '---';
+
+        // application directory
         if(is_dir(DIR_FILES_EMAIL_TEMPLATES)) {
-            $templateList += scandir(DIR_FILES_EMAIL_TEMPLATES)
+            foreach(glob(DIR_FILES_EMAIL_TEMPLATES .'/*.php') as $templatePath) {
+                $template = pathinfo($templatePath, PATHINFO_FILENAME);
+                $templateList['Application'][$template] = $template;
+            }
         }
-        var_dump($templateList);
-        die();
 
-        if(is_dir(DIR_PACKAGES)) {
-            foreach(scandir(DIR_PACKAGES) as $pkgHandle) {
-                if (is_dir(DIR_PACKAGES . '/' . $pkgHandle)) {
-
+        // packages directories
+        foreach(glob(DIR_PACKAGES .'/*', GLOB_ONLYDIR) as $pkgPath) {
+            $pkgHandle = basename($pkgPath);
+            $pkgMailPath = $pkgPath . '/' . DIRNAME_MAIL_TEMPLATES;
+            if(is_dir($pkgMailPath)) {
+                foreach(glob($pkgMailPath .'/*.php') as $templatePath) {
+                    $template = pathinfo($templatePath, PATHINFO_FILENAME);
+                    if(!in_array($template, $templateList['Application'])) {
+                        $templateList['Package'][$pkgHandle .'/'. $template] = $pkgHandle .'/'. $template;
+                    }
                 }
             }
         }
 
-        {
-            if ($pkgHandle != null) {
-                if (is_dir(DIR_PACKAGES . '/' . $pkgHandle)) {
-                    include DIR_PACKAGES . '/' . $pkgHandle . '/' . DIRNAME_MAIL_TEMPLATES . "/{$template}.php";
-                } else {
-                    include DIR_PACKAGES_CORE . '/' . $pkgHandle . '/' . DIRNAME_MAIL_TEMPLATES . "/{$template}.php";
+        // core packages directories
+        foreach(glob(DIR_PACKAGES_CORE .'/*', GLOB_ONLYDIR) as $pkgPath) {
+            $pkgHandle = basename($pkgPath);
+            $pkgMailPath = $pkgPath . '/' . DIRNAME_MAIL_TEMPLATES;
+            if(is_dir($pkgMailPath)) {
+                foreach(glob($pkgMailPath .'/*.php') as $templatePath) {
+                    $template = pathinfo($templatePath, PATHINFO_FILENAME);
+                    if(!in_array($template, $templateList['Application']) && !in_array([ 'template' => $template, 'pkgHandle' => $pkgHandle ], $templateList['Package'])) {
+                        $templateList['Package'][$pkgHandle .'/'. $template] = $pkgHandle .'/'. $template;
+                    }
                 }
-            } else {
-                include DIR_FILES_EMAIL_TEMPLATES_CORE . "/{$template}.php";
             }
         }
 
+        // core packages directories
+        foreach(glob(DIR_FILES_EMAIL_TEMPLATES_CORE .'/*.php') as $templatePath) {
+            $template = pathinfo($templatePath, PATHINFO_FILENAME);
+            if(!in_array($template, $templateList['Application'])) {
+                $templateList['Core'][$template] = $template;
+            }
+        }
+
+        return $templateList;
     }
 
 }
