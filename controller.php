@@ -72,13 +72,6 @@ class Controller extends Package
         if (!$formNotificationObject) {
             $formNotificationObject = \Express::buildObject('form_notification', 'form_notifications', 'Form Notification', $package);
             // Set up a select multiple settings object
-            $formNotificationFormsSettings = new \Concrete\Core\Entity\Attribute\Key\Settings\SelectSettings();
-            $formNotificationFormsSettings->setAllowMultipleValues(true);
-            $formNotificationFormsSettings->setAllowOtherValues(true);
-
-            $formNotificationTemplateSettings = new \Concrete\Core\Entity\Attribute\Key\Settings\SelectSettings();
-            $formNotificationTemplateSettings->setAllowMultipleValues(true);
-            $formNotificationTemplateSettings->setAllowOtherValues(true);
 
             // Add attributes
             $formNotificationObject->addAttribute('text', 'Title', 'form_notification_title');
@@ -89,26 +82,9 @@ class Controller extends Package
             $formNotificationObject->addAttribute('email', 'Reply To', 'form_notification_reply_to');
             $formNotificationObject->addAttribute('multiple_emails', 'Send To (Leave empty for autoresponder)', 'form_notification_to');
             $formNotificationObject->addAttribute('multiple_emails', 'BCC', 'form_notification_bcc');
-            $formNotificationObject->addAttribute('select', 'Applicable Forms', 'form_notification_forms', $formNotificationFormsSettings);
-            $formNotificationObject->addAttribute('select', 'Template', 'form_notification_template', $formNotificationTemplateSettings);
+            $formNotificationObject->addAttribute('express_form_select', 'Form', 'form_notification_express_form');
+            $formNotificationObject->addAttribute('mail_template_select', 'Mail Template', 'form_notification_mail_template');
             $formNotificationObject->save();
-
-            // Add the select options
-            //// TODO: Create an attribute that just displays the current available forms rather than having the options set here
-            $attributeKey = $formNotificationObject->getAttributeKeyCategory()->getByHandle('form_notification_forms');
-            $entityManager = \Core::make('database/orm')->entityManager();
-            $expressFormRepository = $entityManager->getRepository('Concrete\Core\Entity\Express\Form');
-            $expressForms = $expressFormRepository->findAll();
-            $selectOptions = [];
-            foreach ($expressForms as $expressForm) {
-                $selectOptions[] = $expressForm->getEntity()->getHandle();
-                SelectAttributeTypeOption::add($attributeKey, $expressForm->getEntity()->getHandle());
-            }
-            // $attributeKey = $formNotificationObject->getAttributeKeyCategory()->getByHandle('form_notification_template');
-            // $values = ['testing value'];
-            // foreach ($values as $val) {
-            //     SelectAttributeTypeOption::add($attributeKey, $val);
-            // }
 
             //// TODO: See if DB rollback is automatic or if we need to implement it here
             //// TODO: Automatically create an administration form too
@@ -118,13 +94,13 @@ class Controller extends Package
                 ->addAttributeKeyControl('form_notification_title')
                 ->addAttributeKeyControl('form_notification_from_email')
                 ->addAttributeKeyControl('form_notification_from_name')
+                ->addAttributeKeyControl('form_notification_reply_to')
                 ->addAttributeKeyControl('form_notification_subject')
                 ->addAttributeKeyControl('form_notification_content')
-                ->addAttributeKeyControl('form_notification_forms')
                 ->addAttributeKeyControl('form_notification_to')
-                ->addAttributeKeyControl('form_notification_reply_to')
                 ->addAttributeKeyControl('form_notification_bcc')
-                ->addAttributeKeyControl('form_notification_template');
+                ->addAttributeKeyControl('form_notification_express_form')
+                ->addAttributeKeyControl('form_notification_mail_template');
             $form = $form->save();
             // Set the default forms for the new object
             $formNotificationObject->setDefaultViewForm($form);
