@@ -43,6 +43,14 @@ class Controller extends DefaultController
         }
     }
 
+    public function getDisplayValue() {
+        $value = null;
+        if (is_object($this->attributeValue)) {
+            $value = $this->app->make('helper/text')->entities($this->getAttributeValue()->getValue());
+        }
+        return implode('<br />', explode(',', $value));
+    }
+
     public function createAttributeValue($value) {
         $output = "";
         if ($value != null) {
