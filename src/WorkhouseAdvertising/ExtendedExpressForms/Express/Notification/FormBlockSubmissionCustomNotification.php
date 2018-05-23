@@ -60,19 +60,21 @@ class FormBlockSubmissionCustomNotification extends FormBlockSubmissionEmailNoti
                         $templateName = $template[1];
                     }
 
-                    $mh = $this->app->make('mail');
-                    $mh->to($toEmail);
-                    $mh->from($fromAddress, $fromName);
-                    $mh->replyto($replyTo);
-                    if ($bcc) {
-                        $mh->bcc($bcc);
-                    }
                     $content = $message;
                     foreach($this->getAttributeValues($entry) as $attributes) {
                         $handle = $attributes->getAttributeKey()->getAttributeKeyHandle();
                         $value = $attributes->getValue();
 
                         $content = str_replace('{{'.$handle.'}}', $value, $content);
+                        $toEmail = str_replace('{{'.$handle.'}}', $value, $toEmail);
+                    }
+
+                    $mh = $this->app->make('mail');
+                    $mh->to($toEmail);
+                    $mh->from($fromAddress, $fromName);
+                    $mh->replyto($replyTo);
+                    if ($bcc) {
+                        $mh->bcc($bcc);
                     }
 
                     $mh->addParameter('subject', $subject);
