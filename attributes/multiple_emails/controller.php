@@ -29,18 +29,23 @@ class Controller extends DefaultController
 
     public function validateForm($data)
     {
+        $valid = true;
+        $error = $this->app->make('error');
         foreach($data['value'] as $value) {
             if (!$value) {
                 return new FieldNotPresentError(new AttributeField($this->getAttributeKey()));
             } else {
                 $fh = $this->app->make('helper/validation/strings');
-                if (!$fh->email($value)) {
-                    return new Error(t('Invalid email address.'), new AttributeField($this->getAttributeKey()));
-                } else {
-                    return true;
+                $isAttrRef = $fh->attributeReference($value);
+                $isEmail = $fh->email($value);
+                if(!$isAttrRef && !$isEmail) {
+                    $valid = false;
+                    $error->add( t("$value is not a valid email address or attribute reference"));
                 }
             }
         }
+        return $valid ? $valid : $error;
+
     }
 
     public function getDisplayValue() {

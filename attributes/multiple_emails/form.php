@@ -15,13 +15,16 @@
 
     <?php 
         foreach($value as $email) {
-            print $form->email( $this->field('value') . '[]', "$email");
+            print $form->text( $this->field('value') . '[]', "$email", [ 
+                'pattern' => '^\{\{.*\}\}$|.+@.+', 
+                'title' => 'Should be a valid email or a variable enclosed in double curly braces {{ }}'
+            ]);
         }
     ?>
     <button type="btn btn-primary" onclick="addAdditionalEmail(this); return false;">+</button>
 
     <script type="text/template" role="add_email_address">
-        <?php print $form->email( $this->field('value') . '[]', ''); ?>
+        <?php print $form->text( $this->field('value') . '[]', ''); ?>
     </script>
     <style>
         .multiple_emails > input {

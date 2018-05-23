@@ -52,8 +52,8 @@ class Controller extends Package
 
     public function on_start()
     {
-        $this->app->make('Concrete\Core\Express\Controller\Manager')
-                  ->setStandardController('\WorkhouseAdvertising\ExtendedExpressForms\Controller\FormController');
+        $this->app->make('Concrete\Core\Express\Controller\Manager')->setStandardController('\WorkhouseAdvertising\ExtendedExpressForms\Controller\FormController');
+        $this->app->bind('helper/validation/strings', '\WorkhouseAdvertising\ExtendedExpressForms\Utility\Service\Validation\Strings');
     }
 
     /**
