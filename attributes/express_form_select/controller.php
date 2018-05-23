@@ -5,6 +5,7 @@ namespace Concrete\Package\ExtendedExpressForms\Attribute\ExpressFormSelect;
 use Concrete\Core\Attribute\DefaultController;
 use Concrete\Core\Attribute\FontAwesomeIconFormatter;
 use Concrete\Core\Attribute\Controller as AttributeTypeController;
+use Concrete\Core\Entity\Express\Control\AttributeKeyControl;
 use Concrete\Core\Entity\Attribute\Value\Value\TextValue;
 use Doctrine\ORM\Query\Expr;
 
@@ -32,12 +33,19 @@ class Controller extends DefaultController
         $expressFormRepository = $this->entityManager->getRepository('Concrete\Core\Entity\Express\Form');
         $expressForms = $expressFormRepository->findAll();
         $selectOptions = [];
+        $formFields = [];
         $selectOptions[] = '---';
         foreach ($expressForms as $expressForm) {
             $selectOptions[$expressForm->getID()] = $expressForm->getEntity()->getName() . ' > ' . $expressForm->getName();
+            foreach($expressForm->getControls() as $control) {
+                if($control instanceof AttributeKeyControl) {
+                    $formFields[$expressForm->getID()][] = ($control->getAttributeKey()->getAttributeKeyHandle());
+                }
+            }
         }
 
         $this->set('forms', $selectOptions);
+        $this->set('form_fields', $formFields);
         $this->set('selected_form', $selectedFormId);
     }
 
