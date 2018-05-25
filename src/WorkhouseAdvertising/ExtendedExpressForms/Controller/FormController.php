@@ -1,6 +1,7 @@
 <?php
 namespace WorkhouseAdvertising\ExtendedExpressForms\Controller;
 
+use Events;
 use Concrete\Core\Express\Controller\StandardController;
 use Concrete\Core\Express\Entry\Notifier\NotificationProviderInterface;
 use Concrete\Core\Express\Entry\Notifier\StandardNotifier;
@@ -23,6 +24,11 @@ class FormController extends StandardController
         $notifier = parent::getNotifier($provider);
         if ($provider) {
             $notifier->getNotificationList()->addNotification(new FormBlockSubmissionCustomNotification($this->app, $provider));
+
+            $event = new \Symfony\Component\EventDispatcher\GenericEvent();
+            $event->setArgument('notifier', $notifier);
+            $event->setArgument('provider', $provider);
+            Events::dispatch('on_express_notifier_add', $event);
         }
         return $notifier;
     }
