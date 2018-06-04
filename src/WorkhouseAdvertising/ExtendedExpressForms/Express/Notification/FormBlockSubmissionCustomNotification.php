@@ -40,14 +40,15 @@ class FormBlockSubmissionCustomNotification extends FormBlockSubmissionEmailNoti
             foreach ($customNotifications as $customNotification) {
                 if($customNotification->getFormNotificationExpressForm() == $form->getID()) {
 
-                    $title = $customNotification->getFormNotificationTitle();
-                    $fromAddress = $customNotification->getFormNotificationFromEmail();
-                    $fromName = $customNotification->getFormNotificationFromName();
-                    $toEmail = $customNotification->getFormNotificationTo();
-                    $bcc = $customNotification->getFormNotificationBcc();
-                    $replyTo = $customNotification->getFormNotificationReplyTo();
-                    $subject = $customNotification->getFormNotificationSubject();
-                    $message = $customNotification->getFormNotificationContent();
+                    // $title = $customNotification->getFormNotificationTitle();
+                    //// TODO: Add in email address validation and exception handling
+                    $fromAddress = trim($customNotification->getFormNotificationFromEmail()) ?: $this->getFromEmail();
+                    $fromName = trim($customNotification->getFormNotificationFromName()) ?: null;
+                    $toEmail = trim($customNotification->getFormNotificationTo()) ?: $this->getToEmail($entry);
+                    $bcc = trim($customNotification->getFormNotificationBcc());
+                    $replyTo = trim($customNotification->getFormNotificationReplyTo()) ?: $this->getReplyToEmail($entry);
+                    $subject = $customNotification->getFormNotificationSubject() ?: t('Thank you for your enquiry');
+                    $message = $customNotification->getFormNotificationContent() ?: $this->blockController->thankyouMsg;
 
                     $templateName = "";
                     $pkgHandle = null;

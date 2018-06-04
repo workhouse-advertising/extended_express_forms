@@ -5,6 +5,7 @@ use Concrete\Core\Attribute\Context\FrontendFormContext as BaseFrontendFormConte
 use Concrete\Core\Attribute\View;
 use Concrete\Core\Entity\Attribute\Key\Key;
 use Concrete\Core\Filesystem\TemplateLocator;
+use Concrete\Core\Filesystem\TemplateLocation;
 
 class FrontendFormContext extends BaseFrontendFormContext
 {
@@ -20,11 +21,18 @@ class FrontendFormContext extends BaseFrontendFormContext
      */
     protected $form;
 
-    // public function setLocation(TemplateLocator $locator)
-    // {
-    //     $locator->setTemplate('frontend');
-    //     return $locator;
-    // }
+    /**
+     * Add the package template location and set the template
+     * //// TODO: Consider making this optional and dynamically setting the template based on the theme's selected grid layout
+     * 
+     * @param TemplateLocator $locator [description]
+     */
+    public function setLocation(TemplateLocator $locator)
+    {
+        $locator->addLocation((new TemplateLocation('elements/form', 'extended_express_forms')));
+        $locator->setTemplate('bootstrap3_extended');
+        return $locator;
+    }
 
     /**
      * [render description]
