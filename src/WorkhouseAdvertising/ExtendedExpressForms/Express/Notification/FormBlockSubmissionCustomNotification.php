@@ -78,6 +78,12 @@ class FormBlockSubmissionCustomNotification extends FormBlockSubmissionEmailNoti
                         $mh->bcc($bcc);
                     }
 
+                    // Check for attachments
+                    $attachment = $customNotification->getFormNotificationAttachment();
+                    if ($attachment && is_object($attachment)) {
+                        $mh->addAttachment($attachment);
+                    }
+
                     $mh->addParameter('subject', $subject);
                     $mh->addParameter('attributes', $this->getAttributeValues($entry));
                     $mh->addParameter('content', [ $content ]);
