@@ -6,12 +6,16 @@ use Package;
 use BlockType;
 use CollectionAttributeKey;
 use Concrete\Attribute\Select\Option as SelectAttributeTypeOption;
+use Concrete\Core\Entity\Attribute\Key\ExpressKey;
+use Concrete\Core\Entity\Express\Control\AttributeKeyControl;
+use Doctrine\ORM\Id\UuidGenerator;
+use WorkhouseAdvertising\ExtendedExpressForms\Concrete\ObjectBuilder as ObjectBuilderExtended;
 
 class Controller extends Package
 {
     protected $pkgHandle = 'extended_express_forms';
     protected $appVersionRequired = '5.7.1';
-    protected $pkgVersion = '1.0';
+    protected $pkgVersion = '1.1.0';
     protected $pkgAutoloaderRegistries = array(
         'src/WorkhouseAdvertising/ExtendedExpressForms' => '\WorkhouseAdvertising\ExtendedExpressForms',
     );
@@ -83,6 +87,7 @@ class Controller extends Package
             $formNotificationObject->addAttribute('multiple_emails', 'BCC', 'form_notification_bcc');
             $formNotificationObject->addAttribute('express_form_select', 'Form', 'form_notification_express_form');
             $formNotificationObject->addAttribute('mail_template_select', 'Mail Template', 'form_notification_mail_template');
+            $formNotificationObject->addAttribute('image_file', 'Attachment', 'form_notification_attachment');
             $formNotificationObject->save();
 
             //// TODO: See if DB rollback is automatic or if we need to implement it here
@@ -99,12 +104,47 @@ class Controller extends Package
                 ->addAttributeKeyControl('form_notification_to')
                 ->addAttributeKeyControl('form_notification_bcc')
                 ->addAttributeKeyControl('form_notification_express_form')
-                ->addAttributeKeyControl('form_notification_mail_template');
+                ->addAttributeKeyControl('form_notification_mail_template')
+                ->addAttributeKeyControl('form_notification_attachment');
             $form = $form->save();
             // Set the default forms for the new object
             $formNotificationObject->setDefaultViewForm($form);
             $formNotificationObject->setDefaultEditForm($form);
             $formNotificationObject->save();
         }
+    }
+
+    /**
+     * Upgrade the add-on
+     *
+     * @return void
+     */
+    public function upgrade()
+    {
+        $formNotificationObject = \Express::getObjectByHandle('form_notification');
+        $category = $formNotificationObject->getAttributeKeyCategory();
+        $existing = $category->getAttributeKeyByHandle('form_notification_attachment');
+        if (!is_object($existing)) {
+            $builder = $this->app->make(ObjectBuilderExtended::class);
+            $builder->setEntity($formNotificationObject);
+            $builder->addAttribute('image_file', 'Attachment', 'form_notification_attachment');
+            $builder->save();
+            // TODO: Figure out how we can automatcially add the field to the correct fieldset.
+            //       Perhaps consider switching this to XML data for import.
+            // foreach ($formNotificationObject->getDefaultEditForm()->getFieldSets() as $fieldset) {
+            //     $control = new AttributeKeyControl();
+            //     $key = new ExpressKey();
+            //     $key->setAttributeKeyHandle('form_notification_attachment');
+            //     $control->setAttributeKey($key);
+            //     $control->setId((new UuidGenerator())->generate($builder->getEntityManager(), $control));
+            //     $fieldset->getControls()->add($control);
+            //     $entityManager = $builder->getEntityManager();
+            //     $entityManager->persist($fieldset);
+            //     // $formNotificationObject->getDefaultEditForm()->save();
+            //     // Only add the field to the first fieldset
+            //     break;
+            // }
+        }
+        parent::upgrade();
     }
 }
